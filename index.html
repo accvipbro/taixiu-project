@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Tài Xỉu Mini — Dark UI</title>
+<style>
+  :root {
+    --bg1:#071026; --bg2:#0f1724; --card:#0f1724; --muted:#9fb1c3;
+    --accent:#06b6d4; --accent2:#2563eb; --danger:#ef4444;
+  }
+  html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+  body{
+    background: linear-gradient(135deg,var(--bg1),var(--bg2));
+    color:#e6eef8; display:flex; align-items:flex-start; justify-content:center; padding:28px;
+  }
+  .container{width:100%;max-width:1100px;}
+  .card{background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.04); padding:18px; border-radius:14px; box-shadow:0 8px 24px rgba(2,6,23,0.6);}
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  h1{margin:0;font-size:20px}
+  .small{color:var(--muted);font-size:13px}
+  .grid{display:flex;gap:16px;flex-wrap:wrap}
+  .left{flex:2; min-width:320px}
+  .right{flex:1; min-width:260px}
+  input,select{width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);color:#e6eef8;margin-top:8px;box-sizing:border-box}
+  button{padding:10px 14px;border-radius:10px;border:none;cursor:pointer;font-weight:600}
+  .btn-primary{background:var(--accent2);color:white}
+  .btn-accent{background:var(--accent);color:#02161a}
+  .btn-danger{background:var(--danger);color:white}
+  .row{display:flex;gap:8px;align-items:center;margin-top:10px}
+  .dice{display:flex;gap:8px;font-size:28px;margin-top:12px}
+  .dice .die{width:56px;height:56px;border-radius:8px;background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center;font-weight:700}
+  .history{max-height:280px;overflow:auto;margin-top:8px;padding:6px;background:rgba(0,0,0,0.12);border-radius:8px}
+  .history-item{display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid rgba(255,255,255,0.02);font-size:13px}
+  .lb{max-height:420px;overflow:auto;padding:6px;background:rgba(0,0,0,0.06);border-radius:8px}
+  .lb-row{display:flex;justify-content:space-between;padding:8px;border-bottom:1px dashed rgba(255,255,255,0.02)}
+  .muted{color:var(--muted);font-size:13px}
+  .msg{color:#ffd166;margin-top:8px;font-size:14px;min-height:20px}
+  @media(max-width:880px){ .grid{flex-direction:column} .right{order:2} .left{order:1} }
+  .disabled{opacity:0.6;pointer-events:none}
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Tài Xỉu Mini — Dark</h1>
+        <div class="small">Đăng ký / đăng nhập, chơi chung (server trên máy bạn)</div>
+      </div>
+      <div class="small">Bạn là admin? chỉnh trực tiếp file <code>data.json</code> hoặc /admin endpoint</div>
+    </header>
+
+    <div id="authCard" class="card" style="margin-bottom:12px">
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        <input id="inUser" placeholder="Tài khoản (vd: anphm827)" style="max-width:260px"/>
+        <input id="inPass" placeholder="Mật khẩu" type="password" style="max-width:260px"/>
+        <div style="display:flex;gap:8px">
+          <button id="btnLogin" class="btn-primary">Đăng nhập</button>
+          <button id="btnRegister" class="btn-accent">Đăng ký</button>
+        </div>
+      </div>
+      <div class="msg" id="authMsg"></div>
+    </div>
+
+    <div class="grid">
+      <div class="left card" id="gameCard" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div class="small">Xin chào, <strong id="playerName"></strong></div>
+            <div class="muted">Số dư: <span id="playerCoins"></span> xu</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button id="btnLogout" class="btn-danger">Đăng xuất</button>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <label class="muted">Số tiền đặt</label>
+          <input id="inputBet" type="number" value="50" min="1" />
+          <div class="row">
+            <button id="btnTai" class="btn-primary">Tài (11 - 17)</button>
+            <button id="btnXiu" class="btn-accent">Xỉu (3 - 10)</button>
+            <div style="margin-left:auto" class="muted">Delay 2s trước khi tung</div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <div id="resultText" style="font-weight:700;font-size:15px"></div>
+          <div class="dice" id="diceBox">
+            <div class="die" id="die1">—</div>
+            <div class="die" id="die2">—</div>
+            <div class="die" id="die3">—</div>
+          </div>
+        </div>
+
+        <div style="margin-top:14px">
+          <div style="display:flex;gap:8px">
+            <button id="btnHistory" class="muted" style="background:transparent;border:1px solid rgba(255,255,255,0.03);border-radius:8px;padding:8px">Xem lịch sử</button>
+            <button id="btnLeaderboard" class="muted" style="background:transparent;border:1px solid rgba(255,255,255,0.03);border-radius:8px;padding:8px">Bảng xếp hạng</button>
+          </div>
+          <div id="gameMsg" class="msg"></div>
+        </div>
+
+        <div style="margin-top:12px">
+          <h4 style="margin:0 0 8px 0">Lịch sử (gần nhất)</h4>
+          <div class="history" id="historyList">
+            <div class="muted">Chưa có lượt chơi nào.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="right card" id="sideCard">
+        <h4 style="margin-top:0">Bảng xếp hạng (Top 10)</h4>
+        <div class="lb" id="leaderboardList">
+          <div class="muted">Chưa có tài khoản.</div>
+        </div>
+
+        <hr style="margin:12px 0;border-color:rgba(255,255,255,0.03)">
+
+        <h4 style="margin:0 0 8px 0">Danh sách tài khoản</h4>
+        <div id="accountsList" class="lb">
+          <div class="muted">Chưa có tài khoản.</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:14px" class="small muted">Lưu ý: Đây là demo. Server phải chạy ở máy bạn. Nếu server ở IP khác, sửa `SERVER_URL` trong mã (dưới).</div>
+  </div>
+
+<script>
+/* ==== CÀI ĐẶT CHỈNH SERVER  ==== */
+const SERVER_URL = "http://127.0.0.1:5000"; // nếu server chạy ở IP khác, sửa ở đây
+
+/* ==== ELEMENTS ==== */
+const inUser = document.getElementById('inUser');
+const inPass = document.getElementById('inPass');
+const btnLogin = document.getElementById('btnLogin');
+const btnRegister = document.getElementById('btnRegister');
+const authMsg = document.getElementById('authMsg');
+
+const gameCard = document.getElementById('gameCard');
+const playerName = document.getElementById('playerName');
+const playerCoins = document.getElementById('playerCoins');
+const btnLogout = document.getElementById('btnLogout');
+const inputBet = document.getElementById('inputBet');
+const btnTai = document.getElementById('btnTai');
+const btnXiu = document.getElementById('btnXiu');
+const resultText = document.getElementById('resultText');
+const die1 = document.getElementById('die1');
+const die2 = document.getElementById('die2');
+const die3 = document.getElementById('die3');
+const gameMsg = document.getElementById('gameMsg');
+
+const historyList = document.getElementById('historyList');
+const leaderboardList = document.getElementById('leaderboardList');
+const accountsList = document.getElementById('accountsList');
+const btnHistory = document.getElementById('btnHistory');
+const btnLeaderboard = document.getElementById('btnLeaderboard');
+
+let me = null;
+let busy = false;
+
+/* ==== HELPERS ==== */
+function showAuth(text){ authMsg.innerText = text || ''; }
+function showGameMsg(t){ gameMsg.innerText = t || ''; }
+function setBusy(v){
+  busy = v;
+  [btnTai, btnXiu, btnLogout, btnRegister, btnLogin].forEach(b => {
+    if(v) b.classList.add('disabled'); else b.classList.remove('disabled');
+  });
+  inputBet.disabled = v;
+}
+
+/* small fetch helper */
+async function api(path, method='GET', body=null){
+  const opts = { method, headers:{'Content-Type':'application/json'} };
+  if(body) opts.body = JSON.stringify(body);
+  const res = await fetch(SERVER_URL + path, opts);
+  const text = await res.text();
+  let json = null;
+  try{ json = JSON.parse(text); }catch(e){}
+  return { ok: res.ok, status: res.status, text, json };
+}
+
+/* ==== AUTH ==== */
+btnRegister.onclick = async () => {
+  if(busy) return;
+  const u = (inUser.value||'').trim();
+  const p = (inPass.value||'').toString();
+  if(!u){ showAuth('Nhập tên tài khoản.'); return; }
+  if(p.length < 3){ showAuth('Mật khẩu ít nhất 3 ký tự.'); return; }
+  setBusy(true);
+  showAuth('Đang đăng ký...');
+  try{
+    const r = await api('/register','POST',{username:u,password:p});
+    if(!r.ok){ showAuth(r.text || 'Đăng ký lỗi'); setBusy(false); return; }
+    // register endpoint trả plain text trong một số phiên bản -> treat OK
+    showAuth('Đăng ký thành công — tự động đăng nhập...');
+    await doLogin(u,p);
+  }catch(e){
+    showAuth('Lỗi mạng khi đăng ký'); setBusy(false);
+  }
+};
+
+btnLogin.onclick = async () => {
+  if(busy) return;
+  const u = (inUser.value||'').trim();
+  const p = (inPass.value||'').toString();
+  if(!u || !p){ showAuth('Nhập tài khoản và mật khẩu'); return; }
+  setBusy(true);
+  showAuth('Đang đăng nhập...');
+  await doLogin(u,p);
+};
+
+async function doLogin(u,p){
+  try{
+    const r = await api('/login','POST',{username:u,password:p});
+    if(!r.ok){ showAuth('Sai tài khoản hoặc mật khẩu'); setBusy(false); return; }
+    // server trả {"success":true,"balance":...}
+    const data = r.json || {};
+    me = { username: u, coins: data.balance || 0, history: [] };
+    // fetch history from server
+    const h = await api(`/history/${encodeURIComponent(u)}`);
+    if(h.ok && h.json) me.history = h.json;
+    renderAfterLogin();
+    showAuth('');
+    setBusy(false);
+  }catch(e){
+    showAuth('Lỗi khi kết nối server'); setBusy(false);
+  }
+}
+
+btnLogout.onclick = () => {
+  me = null;
+  gameCard.style.display = 'none';
+  document.getElementById('authCard').style.display = 'block';
+  showGameMsg('');
+  resultText.innerText = '';
+  die1.innerText = die2.innerText = die3.innerText = '—';
+}
+
+/* ==== RENDER AFTER LOGIN ==== */
+function renderAfterLogin(){
+  document.getElementById('authCard').style.display = 'none';
+  gameCard.style.display = 'block';
+  playerName.innerText = me.username;
+  playerCoins.innerText = me.coins;
+  renderHistory();
+  renderLeaderboard();
+  renderAccounts();
+}
+
+/* ==== PLAY ==== */
+btnTai.onclick = () => startPlay('tai');
+btnXiu.onclick = () => startPlay('xiu');
+
+async function startPlay(choice){
+  if(busy) return;
+  if(!me){ showGameMsg('Bạn chưa đăng nhập'); return; }
+  let bet = parseInt(inputBet.value) || 0;
+  if(bet <= 0){ showGameMsg('Nhập số tiền đặt hợp lệ'); return; }
+  // lock
+  setBusy(true);
+  resultText.innerText = `Bạn chọn ${choice.toUpperCase()} — chờ 2 giây...`;
+  die1.innerText = die2.innerText = die3.innerText = '...';
+  await new Promise(r=>setTimeout(r,2000));
+  resultText.innerText = 'Đang tung...';
+  // small animation
+  for(let i=0;i<8;i++){
+    die1.innerText = Math.floor(Math.random()*6)+1;
+    die2.innerText = Math.floor(Math.random()*6)+1;
+    die3.innerText = Math.floor(Math.random()*6)+1;
+    await new Promise(r=>setTimeout(r,70));
+  }
+  // call server play (send bet too; server may ignore bet if not implemented)
+  try{
+    const r = await api('/play','POST',{username: me.username, choice: choice, bet: bet});
+    if(!r.ok){
+      showGameMsg(r.text || 'Lỗi khi chơi');
+      setBusy(false);
+      return;
+    }
+    const data = r.json || {};
+    // server expected to return dice, win, balance (some versions different)
+    // handle multiple possible shapes
+    let d = data.dice || data.dice || [];
+    if(Array.isArray(d) && d.length===3){
+      die1.innerText = d[0]; die2.innerText = d[1]; die3.innerText = d[2];
+    } else if(typeof data.total === 'number'){
+      // maybe server returns single total; reconstruct placeholders
+      die1.innerText = die2.innerText = die3.innerText = data.total;
+    } else if(typeof data.dice === 'string'){
+      // fallback
+    }
+    const win = data.win === true || data.outcome === 'win' || (data.result && data.result === 'win');
+    const balance = data.balance || data.coins || data.coins === 0 ? (data.balance || data.coins) : me.coins;
+    // update local
+    me.coins = balance || me.coins;
+    playerCoins.innerText = me.coins;
+    // update history (prefer server-returned record)
+    if(data.result){
+      me.history = me.history || [];
+      me.history.unshift({
+        time: data.result.time || new Date().toLocaleString(),
+        dice: data.result.dice || [die1.innerText,die2.innerText,die3.innerText],
+        sum: data.result.sum || (Number(die1.innerText)+Number(die2.innerText)+Number(die3.innerText)),
+        choice: choice,
+        bet: bet,
+        outcome: data.result.outcome || (win ? 'win' : 'lose'),
+        balanceAfter: balance
+      });
+    } else {
+      me.history = me.history || [];
+      me.history.unshift({
+        time: new Date().toLocaleString(),
+        dice: [die1.innerText,die2.innerText,die3.innerText],
+        sum: Number(die1.innerText)+Number(die2.innerText)+Number(die3.innerText),
+        choice: choice,
+        bet: bet,
+        outcome: win ? 'win' : 'lose',
+        balanceAfter: me.coins
+      });
+    }
+    if(me.history.length > 200) me.history.length = 200;
+    renderHistory();
+    renderLeaderboard();
+    resultText.innerText = win ? `Bạn thắng! +${bet} xu` : `Bạn thua! -${bet} xu`;
+    showGameMsg('');
+  }catch(e){
+    showGameMsg('Lỗi khi gọi server.');
+  } finally {
+    setBusy(false);
+  }
+}
+
+/* ==== RENDER HISTORY / LEADERBOARD / ACCOUNTS ==== */
+function renderHistory(){
+  historyList.innerHTML = '';
+  if(!me || !me.history || me.history.length === 0){
+    historyList.innerHTML = '<div class="muted">Chưa có lượt chơi nào.</div>'; return;
+  }
+  me.history.slice(0,20).forEach(it => {
+    const div = document.createElement('div');
+    div.className = 'history-item';
+    const left = document.createElement('div');
+    left.innerHTML = `<div style="font-weight:600">${it.time || ''}</div><div class="muted">Xúc xắc: ${Array.isArray(it.dice)?it.dice.join(', '):it.dice} (Tổng ${it.sum || ''})</div>`;
+    const right = document.createElement('div');
+    right.style.textAlign='right';
+    right.innerHTML = `<div>Đặt: ${it.bet || 0} xu</div><div style="font-weight:700;color:${it.outcome==='win' ? '#86efac' : '#fb7185'}">${it.outcome==='win' ? 'Thắng' : 'Thua'}</div><div class="muted">Số dư: ${it.balanceAfter || ''}</div>`;
+    div.appendChild(left); div.appendChild(right);
+    historyList.appendChild(div);
+  });
+}
+
+async function renderLeaderboard(){
+  leaderboardList.innerHTML = '<div class="muted">Đang tải...</div>';
+  const r = await api('/leaderboard');
+  if(!r.ok){ leaderboardList.innerHTML = '<div class="muted">Không tải được bảng xếp hạng</div>'; return; }
+  const arr = r.json || [];
+  leaderboardList.innerHTML = '';
+  if(!Array.isArray(arr) || arr.length===0){ leaderboardList.innerHTML = '<div class="muted">Chưa có tài khoản.</div>'; return; }
+  arr.slice(0,10).forEach((u,idx) => {
+    const row = document.createElement('div'); row.className = 'lb-row';
+    row.innerHTML = `<div>#${idx+1} <strong>${u.username}</strong></div><div>${u.balance ?? u.coins ?? ''} xu</div>`;
+    leaderboardList.appendChild(row);
+  });
+}
+
+async function renderAccounts(){
+  accountsList.innerHTML = '<div class="muted">Đang tải...</div>';
+  const r = await api('/admin/list_users');
+  if(!r.ok){ accountsList.innerHTML = '<div class="muted">Không tải được danh sách</div>'; return; }
+  const list = r.json && r.json.users ? r.json.users : [];
+  accountsList.innerHTML = '';
+  if(list.length===0){ accountsList.innerHTML = '<div class="muted">Chưa có tài khoản.</div>'; return; }
+  list.forEach(u => {
+    const d = document.createElement('div'); d.style.padding='6px'; d.style.borderBottom='1px solid rgba(255,255,255,0.02)';
+    d.innerHTML = `<div style="display:flex;justify-content:space-between"><div>${u.username}</div><div class="muted">${u.coins ?? u.balance ?? 0} xu</div></div>`;
+    accountsList.appendChild(d);
+  });
+}
+
+/* ==== BUTTONS ==== */
+btnHistory.onclick = () => {
+  historyList.scrollTop = 0;
+};
+btnLeaderboard.onclick = () => {
+  renderLeaderboard();
+  leaderboardList.scrollTop = 0;
+};
+
+/* ==== ON LOAD ==== */
+window.addEventListener('load', async ()=>{
+  // preload leaderboard & accounts
+  await renderLeaderboard();
+  await renderAccounts();
+});
+</script>
+</body>
+</html>

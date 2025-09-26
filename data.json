@@ -1,0 +1,43 @@
+{
+  "users": [
+    {
+      "username": "hehe",
+      "password": "iakham",
+      "balance": 1200,
+      "history": [
+        {
+          "choice": "tai",
+          "dice": 7,
+          "win": false
+        },
+        {
+          "choice": "xiu",
+          "dice": 3,
+          "win": true
+        },
+        {
+          "choice": "xiu",
+          "dice": 7,
+          "win": true
+        },
+        {
+          "choice": "xiu",
+          "dice": 8,
+          "win": true
+        }
+      ]
+    },
+    {
+      "username": "dánkibidi",
+      "password": "271012D@n",
+      "balance": 900,
+      "history": [
+        {
+          "choice": "tai",
+          "dice": 4,
+          "win": false
+        }
+      ]
+    }
+  ]
+}

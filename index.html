@@ -412,18 +412,16 @@ window.addEventListener('load', async ()=>{
 <script>
 const LEADERBOARD_SERVER_URL = "https://abcd-1234.ngrok-free.app"; // link ngrok của bạn
 
+
 async function fetchLeaderboard() {
   try {
-  const res = await fetch(`${LEADERBOARD_SERVER_URL}/get_users`);
-    const data = await res.json(); // data có dạng { users: [...] }
+    const res = await fetch(`${LEADERBOARD_SERVER_URL}/leaderboard`);
+    const data = await res.json(); // data là mảng user
 
     const tbody = document.querySelector("#leaderboard tbody");
-    tbody.innerHTML = ""; // xóa bảng cũ
+    tbody.innerHTML = "";
 
-    // Sắp xếp theo balance giảm dần
-    const sorted = data.users.sort((a,b) => b.balance - a.balance);
-
-    sorted.forEach(user => {
+    data.forEach(user => {
       const tr = document.createElement("tr");
       tr.innerHTML = `<td>${user.username}</td><td>${user.balance}</td>`;
       tbody.appendChild(tr);

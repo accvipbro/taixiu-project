@@ -396,5 +396,47 @@ window.addEventListener('load', async ()=>{
   await renderAccounts();
 });
 </script>
+<!-- Leaderboard Table (Realtime) -->
+<table id="leaderboard">
+  <thead>
+    <tr>
+      <th>Username</th>
+      <th>Balance</th>
+    </tr>
+  </thead>
+  <tbody>
+    <!-- JS sẽ điền dữ liệu ở đây -->
+  </tbody>
+</table>
+
+<script>
+const LEADERBOARD_SERVER_URL = "https://abcd-1234.ngrok-free.app"; // link ngrok của bạn
+
+async function fetchLeaderboard() {
+  try {
+  const res = await fetch(`${LEADERBOARD_SERVER_URL}/get_users`);
+    const data = await res.json(); // data có dạng { users: [...] }
+
+    const tbody = document.querySelector("#leaderboard tbody");
+    tbody.innerHTML = ""; // xóa bảng cũ
+
+    // Sắp xếp theo balance giảm dần
+    const sorted = data.users.sort((a,b) => b.balance - a.balance);
+
+    sorted.forEach(user => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${user.username}</td><td>${user.balance}</td>`;
+      tbody.appendChild(tr);
+    });
+
+  } catch (err) {
+    console.error("Error fetching leaderboard:", err);
+  }
+}
+
+// Gọi lần đầu và mỗi 2 giây tự refresh
+fetchLeaderboard();
+setInterval(fetchLeaderboard, 2000);
+</script>
 </body>
 </html>
